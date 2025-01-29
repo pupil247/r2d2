@@ -1,7 +1,7 @@
 # Robot Project - ESP32 Control System  
 
 ## Overview  
-This project is the control system for a R2D2 robot I made, powered by an ESP32. The ESP32 is responsible for managing peripherals, executing pathfinding algorithms, and processing data from sensors. It works alongside a main processing unit to enable functionalities such as facial recognition, object detection, and autonomous navigation.
+This project is the control system for a R2D2 robot I am currently making, powered by an ESP32. The ESP32 is responsible for managing peripherals, executing pathfinding algorithms, and processing data from sensors. It works alongside a main processing unit to enable functionalities such as facial recognition, object detection, and autonomous navigation.
 
 ## Features  
 - **Peripheral Control:** Manages motors, servos, and sensors.  
