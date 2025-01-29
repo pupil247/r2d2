@@ -15,28 +15,17 @@
 
 namespace ioMapping{
 
-    //i2c
-    const uint8_t PIN_SDA = 48;
-    const uint8_t PIN_SCL = 47;
+    //Left Leg pins
+    const uint8_t LEGR_IN1 = 6;
+    const uint8_t LEGR_IN2 = 5; 
+    const uint8_t LEGR_PWM = 16; 
+    const uint8_t LEGR_STNDBY = 7;
 
-    //led
-    const uint8_t PIN_LED = 1;
-
-    //ledBoard
-    const uint8_t PIN_LED_CONTROL = 38;
-
-    //motors
-    const uint8_t GPIO1_1 = 4;
-    const uint8_t GPIO2_1 = 5; 
-    const uint8_t GPIO3_1 = 6;
-    const uint8_t GPIO4_1 = 7;
-
-    const uint8_t  GPIO1_2 = 21;
-    const uint8_t  GPIO2_2 = 37;
-    const uint8_t  GPIO3_2 = 36;
-    const uint8_t  GPIO4_2 = 35;
-
-    const uint8_t GPIO_AIMANT = 8;
+    //Right Leg pins
+    const uint8_t LEGL_IN1 = 15;
+    const uint8_t LEGL_IN2 = 17; 
+    const uint8_t LEGL_PWM = 18; 
+    const uint8_t LEGL_STNDBY = 8;
 
 
 

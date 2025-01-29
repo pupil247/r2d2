@@ -5,39 +5,126 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "../lib/Task.h"
-#include <cstring>
+#include <string.h>
+#include "../lib/singleton.hpp" // Include the header file for TSingleton
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "cJSON.h"  // Include the cJSON library
+#include "Subject.h"
+#include <vector>
+#include <variant>
 
-class Wifi : public Task, public Singleton<Wifi>{
+class Wifi : public Task, public Subject{
+
+private:
+    command_t currentCommand;
+    std::vector<std::variant<int, std::string>> data;
+
 public:
+    static bool reconnecting; // Declaration only
+    
+    Wifi(): Task("Task Wifi"){
+
+    }
+     ~Wifi() {}
+
     esp_err_t begin(){
-        esp_err_t ret;
+        esp_err_t ret = ESP_OK;
+        return ret;
     }
     esp_err_t connect(const char* ssid, const char* password){
-        
+        //Initialize NVS
+        esp_err_t ret = nvs_flash_init();
+        if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            ret = nvs_flash_init();
+        }
+        ESP_ERROR_CHECK(ret);
+
+        // Initialize network interface
+        ESP_ERROR_CHECK(esp_netif_init());
+
+        // Create default event loop
+        ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+        // Create default Wi-Fi station
+        esp_netif_create_default_wifi_sta();
+
+        // Initialize Wi-Fi
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+        // Register event handlers
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                            ESP_EVENT_ANY_ID,
+                                                            &event_handler,
+                                                            NULL,
+                                                            NULL));
+
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                                                            IP_EVENT_STA_GOT_IP,
+                                                            &event_handler,
+                                                            NULL,
+                                                            NULL));
         // Initialize Wi-Fi
         wifi_config_t wifi_config = {
             .sta = {
-                .ssid = "",       // Empty SSID initially
-                .password = ""    // Empty password initially
+                .ssid = "Loulou",       // Empty SSID initially
+                .password = "Loulou141295"    // Empty password initially
             }
         };
-
+        
         // Set SSID and password from arguments
-        strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
-        strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
-        esp_wifi_start();
-        esp_wifi_connect();
-        esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+        //strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
+        //strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
+        ESP_LOGI("wifissid", " %s.", wifi_config.sta.ssid);
+        ESP_LOGI("wifipass", " %s.", wifi_config.sta.password);
+        
+
+        
+        
+        ret = esp_wifi_set_mode(WIFI_MODE_STA);
+        if (ret != ESP_OK) {
+            ESP_LOGE("wifi", "Failed to set Wi-Fi mode: %s", esp_err_to_name(ret));
+            return ret;
+        }
+        
+        ret = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+        if (ret != ESP_OK) {
+            ESP_LOGE("wifi", "Failed to set Wi-Fi config: %s", esp_err_to_name(ret));
+            return ret;
+        }
+        
+        ret = esp_wifi_start();
+        if (ret != ESP_OK) {
+            ESP_LOGE("wifi", "Failed to start Wi-Fi: %s", esp_err_to_name(ret));
+            return ret;
+        }
+        vTaskDelay(pdMS_TO_TICKS(2000)); // Add a small delay before connecting
+        for (int i = 0; i < 5; i++) {
+            ret = esp_wifi_connect();
+            if (ret == ESP_OK) {
+                ESP_LOGI("WiFi", "Connection attempt %d successful", i + 1);
+                break;
+            }
+            ESP_LOGE("WiFi", "Connection attempt %d failed. Retrying...", i + 1);
+            vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+        ESP_ERROR_CHECK(ret);
+        return ret;
     }
+
     esp_err_t disconnect(){
         esp_err_t ret;
+        return ret;
     }
+    
     
     esp_err_t scan(){
 
         esp_err_t ret;
         const char * TAG = "Wifi-Scan";
-
+        
         wifi_scan_config_t scan_config;
         scan_config.ssid = 0;
         scan_config.bssid = 0;
@@ -61,6 +148,7 @@ public:
         } else {
             ESP_LOGE(TAG, "Failed to get scan results");
         }
+        return ret;
     }
 
     std::string getMacAddress(){
@@ -71,9 +159,162 @@ public:
              mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         return std::string(mac_str);
     }
+    
+    void task() override{
+        const char * TAG = "Wifi-Task";
+        ESP_LOGI(TAG, "Test4");
+        const unsigned short SERVER_PORT = 12345;
+        ESP_LOGI(TAG, "Test5");
+        int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_sock < 0) {
+            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+            vTaskDelete(NULL);
+            return;
+        }
+        ESP_LOGI(TAG, "Test");
+        struct sockaddr_in server_addr;
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(SERVER_PORT);
+        server_addr.sin_addr.s_addr = INADDR_ANY;
+
+        // Bind the socket to the address and port
+        int err = bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+        if (err < 0) {
+            ESP_LOGE(TAG, "Unable to bind socket: errno %d", errno);
+            close(server_sock);
+            vTaskDelete(NULL);
+            return;
+        }
+         ESP_LOGI(TAG, "Test2");
+        // Listen for incoming connections
+        err = listen(server_sock, 1);
+        if (err < 0) {
+            ESP_LOGE(TAG, "Unable to listen: errno %d", errno);
+            close(server_sock);
+            vTaskDelete(NULL);
+            return;
+        }
+
+        
+
+         ESP_LOGI(TAG, "Test3");
+
+        // Receive data from the client
+        char recv_buf[1024];
+        int len;
+
+        
+        while(1){
+            // Accept connections
+            struct sockaddr_in client_addr;
+            socklen_t addr_len = sizeof(client_addr);
+            int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_len);
+            if (client_sock < 0) {
+                ESP_LOGI(TAG, "Unable to accept connection: errno %d", errno);
+                vTaskDelay(100);
+                continue;
+            }
+
+            ESP_LOGI(TAG, "Client connected");
+              
+            len = recv(client_sock, recv_buf, sizeof(recv_buf) - 1, 0);
+            if (len < 0) {
+                ESP_LOGE(TAG, "Error receiving data: errno %d", errno);
+                break;
+            }
+            recv_buf[len] = 0;
+            
+            // Parse JSON
+            cJSON *root = cJSON_Parse(recv_buf);
+            if (root == NULL) {
+                ESP_LOGE(TAG, "Error parsing JSON");
+                break;
+            }
+            ESP_LOGI("new data","data1");
+            // Iterate through all keys in the JSON object
+            cJSON *current = NULL;
+            data.clear();
+            cJSON_ArrayForEach(current, root) {
+                ESP_LOGI("new data","data2");
+                if (cJSON_IsNumber(current)) {
+                    // Store integer value
+                    ESP_LOGI("new data", "number");
+                    data.emplace_back(current->valueint);
+                } else if (cJSON_IsString(current)) {
+                    // Store string value
+                    ESP_LOGI("new data", "string");
+                    data.emplace_back(std::string(current->valuestring));
+                }
+                ESP_LOGI("new len", "%d", data.size());
+                // Other types can be handled here if needed
+                // Clean up
+                ESP_LOGI("new data","data3");
+
+                
+                ESP_LOGI("new data","data5");
+                
+                ESP_LOGI("new data","data4");
+                
+            }
+            setData(data);
+            notifyObservers();
+            cJSON_Delete(root);
+
+            //parseCommand((command_t)getCommandType(commandType->valuestring), data1->valueint, data2->valueint);
+            
+            // Close the socket
+            close(client_sock);
+            vTaskDelay(pdMS_TO_TICKS(100));    
+        }
+        
+        close(server_sock);
+        ESP_LOGI(TAG, "Connection closed");
+
+        //vTaskDelete(NULL);    
+        
+    }
+
+    
+
+    // Event handler for Wi-Fi and IP events
+    static void event_handler(void *arg, esp_event_base_t event_base,
+                            int32_t event_id, void *event_data) {
+        const char * TAG = "Wifi-Event";
+        
+        if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+            ESP_LOGI(TAG, "Wi-Fi started, connecting...");
+            esp_wifi_connect();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+            if (!reconnecting) {
+                reconnecting = true;
+                esp_wifi_connect();
+                ESP_LOGI("WiFi", "Reconnecting...");
+                reconnecting = false;
+            }
+        } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+            ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+            ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        }
+    }
+
+    std::vector<std::variant<int, std::string>> getData(){
+        return data;
+    }
+
+    void setData(std::vector<std::variant<int, std::string>> data){
+        this->data = data;
+        notifyObservers();
+    }
+
+    subject_t getType() const override{
+        return WIFI;
+    }
+
     //TODO Implement wifi functions
-    //std::string getIpAddress();   
-    //esp_err_t getRssi();  
-    //esp_err_t status();
-    //esp_err_t stop();
+        //std::string getIpAddress();   
+        //esp_err_t getRssi();  
+        //esp_err_t status();
+        //esp_err_t stop();
 };
+bool Wifi::reconnecting = false;

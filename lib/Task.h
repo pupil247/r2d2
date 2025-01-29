@@ -2,23 +2,30 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <stdio.h>
 #include <string>
 
-class Task{
+class Task {
 
-private:
-    static Task * pObjet;
-    static void task();
 public:
     Task(std::string name){
-        pObjet = this;
+        taskName = name;
     };  
-    ~Task(){};
+    virtual ~Task(){};
+    
+    static Task * pObjet;
 
     void start(){
-        xTaskCreatePinnedToCore( (TaskFunction_t)task,    "Task lcd",    5000,      NULL,    2,    NULL,    1);
+        xTaskCreatePinnedToCore( Task::taskEntry,    "Task wifi",    5000,      this,    2,    NULL,    1);
     };
+protected:
+    virtual void task() = 0;
+private:
+    static void taskEntry(void *pvParameters) {
+        Task *instance = static_cast<Task *>(pvParameters);
+        if (instance) {
+            instance->task();
+        }
+    }
+    std::string taskName;
 };
-
-
-Task* Task::pObjet = nullptr;

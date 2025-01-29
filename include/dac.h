@@ -24,7 +24,10 @@
  * 
  */
 class DAC {
-
+    enum DACState{
+        LOW = 0,
+        HIGH = 1
+    };
 public:
     /**
      * @brief Construct a new DAC object
@@ -45,7 +48,7 @@ public:
      */
     void init(){
         ledc_channel_config_t dacConfig = {
-            .gpio_num = 4,
+            .gpio_num = _pinDAC,
             .speed_mode = LEDC_LOW_SPEED_MODE,
             .channel = LEDC_CHANNEL_0,
             .intr_type = LEDC_INTR_DISABLE,
@@ -83,6 +86,7 @@ public:
 	    uint32_t duty = lroundf(value * (float)max_duty);
         ESP_ERROR_CHECK( ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty) );
 	    ESP_ERROR_CHECK( ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0) );
+        ESP_LOGI("DAC","SET PWM %d", value);
         _duty = value;
     };
 private:

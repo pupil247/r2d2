@@ -1,7 +1,14 @@
 #pragma once
+
 #include "driver/gpio.h"
+#include "esp_log.h"
 
 namespace Gpio{
+    enum GpioState{
+        LOW = 0,
+        HIGH = 1
+    };
+    
     class GpioBase{
     protected:
         const gpio_num_t _pin;
@@ -11,7 +18,7 @@ namespace Gpio{
         {
         };
         virtual ~GpioBase(){};
-        [[nodiscard]] virtual esp_err_t init(void) = 0;
+        [[nodiscard]] virtual esp_err_t     init(void) = 0;
         virtual bool state(void) = 0;
     };
 
@@ -19,11 +26,25 @@ namespace Gpio{
     private:
         bool _state = false;
     public:
-        [[nodiscard]] esp_err_t init();
+        [[nodiscard]] esp_err_t init(void){
+             // Configure the GPIO pin as output
+            if (gpio_config(&_cfg) != ESP_OK) {
+                return ESP_FAIL; // Return an error if configuration fails
+            }
+            return set(_state);
+        }
 
-        esp_err_t set(const bool state);
-        esp_err_t toggle();
-        bool state(void){return _state;};
+        esp_err_t set(const bool state){
+            _state = state;
+            //ESP_LOGI("GPIO","set pin %d, %d",_pin,state);
+            gpio_set_level(_pin, _state); 
+            return ESP_OK;
+        }
+        esp_err_t toggle(){
+            set(!_state);
+            return ESP_OK;
+        }
+        bool state(void){return _state;}
         virtual ~GpioOutput(){};
         GpioOutput(const gpio_num_t pin): 
             GpioBase{pin,
@@ -35,6 +56,7 @@ namespace Gpio{
                     .intr_type = GPIO_INTR_DISABLE,
                 }
             }
+
         {
         }
 
@@ -58,7 +80,12 @@ namespace Gpio{
         {
         }
         virtual ~GpioInput(){};
-        [[nodiscard]] esp_err_t init(void);
-        bool state(void);
+        [[nodiscard]] esp_err_t init(void){
+             // Configure the GPIO pin as output
+            if (gpio_config(&_cfg) != ESP_OK) {
+                return ESP_FAIL; // Return an error if configuration fails
+            }
+        }
+        bool state(void){return _state;}
     };
 }
