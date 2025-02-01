@@ -13,6 +13,7 @@
 #include "Subject.h"
 #include <vector>
 #include <variant>
+#include "esp_http_client.h"
 
 class Wifi : public Task, public Subject{
 
@@ -310,6 +311,62 @@ public:
     subject_t getType() const override{
         return WIFI;
     }
+
+    static esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
+        switch (evt->event_id) {
+            case HTTP_EVENT_ERROR:
+                ESP_LOGI("HTTP", "HTTP_EVENT_ERROR");
+                break;
+            case HTTP_EVENT_ON_CONNECTED:
+                ESP_LOGI("HTTP", "HTTP_EVENT_CONNECTED");
+                break;
+            case HTTP_EVENT_HEADER_SENT:
+                ESP_LOGI("HTTP", "HTTP_EVENT_HEADER_SENT");
+                break;
+            case HTTP_EVENT_ON_DATA:
+                ESP_LOGI("HTTP", "HTTP_EVENT_BODY, len=%d", evt->data_len);
+                if (!esp_http_client_is_chunked_response(evt->client)) {
+                    ESP_LOGI("HTTP", "Response: %s", (char*)evt->data);
+                }
+                break;
+            case HTTP_EVENT_DISCONNECTED:
+                ESP_LOGI("HTTP", "HTTP_EVENT_DISCONNECTED");
+                break;
+        }
+        return ESP_OK;
+    }
+
+    void send_data_to_server() {
+        // Prepare the data (e.g., accelerometer data)
+        char data[512];
+        snprintf(data, sizeof(data),
+                "mean_x=0.015&mean_y=0.025&mean_z=-0.985&std_x=0.012&std_y=0.012&std_z=0.011"
+                "&rms_x=0.015&rms_y=0.015&rms_z=0.014&label=grass");
+
+        // Set up the HTTP client
+        esp_http_client_config_t config = {
+            .url = "http://<SERVER_IP>:5000/upload",
+            .event_handler = _http_event_handler,
+        };
+
+        esp_http_client_handle_t client = esp_http_client_init(&config);
+
+        // Set HTTP POST data
+        esp_http_client_set_post_field(client, data, strlen(data));
+
+        // Perform the HTTP POST request
+        esp_err_t err = esp_http_client_perform(client);
+
+        if (err == ESP_OK) {
+            ESP_LOGI("HTTP", "POST request successful, status = %d", esp_http_client_get_status_code(client));
+        } else {
+            ESP_LOGE("HTTP", "POST request failed: %s", esp_err_to_name(err));
+        }
+
+        // Clean up
+        esp_http_client_cleanup(client);
+    }
+
 
     //TODO Implement wifi functions
         //std::string getIpAddress();   

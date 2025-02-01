@@ -51,7 +51,7 @@ public:
      * @param byte 
      * @return esp_err_t 
      */
-    esp_err_t writeByte(uint8_t addr, uint8_t byte);
+    esp_err_t writeByte(uint8_t addr, uint8_t reg, uint8_t byte);
     /**
      * @brief write data buffer on the i2c bus from a certain adress
      * 
@@ -60,7 +60,7 @@ public:
      * @param dataLen 
      * @return esp_err_t 
      */
-    esp_err_t writeBytes(uint8_t addr, uint8_t * data, int dataLen);
+    esp_err_t writeBytes(uint8_t addr, uint8_t reg, uint8_t * data, int dataLen);
     /**
      * @brief read buffer on the i2c bus from a certain adress
      * 
@@ -69,7 +69,7 @@ public:
      * @param dataLen 
      * @return esp_err_t 
      */
-    esp_err_t readBytes(uint8_t addr, uint8_t * data, int dataLen);
+    esp_err_t readBytes(uint8_t addr, uint8_t reg, uint8_t * data, int dataLen);
 
 private:
     i2c_t i2cInstance;

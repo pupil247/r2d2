@@ -44,10 +44,10 @@ esp_err_t Main::setup(){
 }
 
 void Main::loop(){
-    //((RightLeg*)rightLeg)->forward();
+    ((RightLeg*)rightLeg)->forward();
     ESP_LOGI("Alive","test");
     //vTaskDelay(pdSecond); //1s
-    //((RightLeg*)rightLeg)->reverse();
+    ((RightLeg*)rightLeg)->reverse();
     ESP_LOGI("Alive","test");
     vTaskDelay(pdSecond); //1s
 }
