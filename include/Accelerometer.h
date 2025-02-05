@@ -13,8 +13,8 @@ private:
     int16_t xAccel, yAccel, zAccel;
 
 public:
-    Accelerometer() {
-        i2c_bus = new i2c(ioMapping::sda, ioMapping::scl, I2C_NUM_1);
+    Accelerometer(uint8_t sda, uint8_t scl, i2c_port_t port) {
+        i2c_bus = new i2c(sda, scl, port);
     }
 
     void begin() {

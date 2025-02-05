@@ -21,6 +21,7 @@ esp_err_t Main::setup(){
     esp_err_t status(ESP_OK);
     vTaskDelay(pdMS_TO_TICKS(500));
     
+    accelerometer = new Accelerometer(ioMapping::sda, ioMapping::scl, I2C_NUM_1);
     wifi = new Wifi();
     rightLeg = new RightLeg();
     leftLeg = new LeftLeg();
@@ -38,16 +39,21 @@ esp_err_t Main::setup(){
     vTaskDelay(pdMS_TO_TICKS(5000));
 
     wifi->start();
+    accelerometer->begin();
     //movement->start();
     
     return status;
 }
 
 void Main::loop(){
-    ((RightLeg*)rightLeg)->forward();
+    //((RightLeg*)rightLeg)->forward();
     ESP_LOGI("Alive","test");
     //vTaskDelay(pdSecond); //1s
-    ((RightLeg*)rightLeg)->reverse();
-    ESP_LOGI("Alive","test");
+    //((RightLeg*)rightLeg)->reverse();
+
+    ESP_LOGI("AccelerometerX","%d",accelerometer->getXAccel());
+    ESP_LOGI("AccelerometerY","%d",accelerometer->getYAccel());
+    ESP_LOGI("AccelerometerZ","%d",accelerometer->getZAccel());
+
     vTaskDelay(pdSecond); //1s
 }
