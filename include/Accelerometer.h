@@ -13,24 +13,13 @@ private:
     int16_t xAccel, yAccel, zAccel;
 
 public:
-    Accelerometer(uint8_t sda, uint8_t scl, i2c_port_t port) {
-        i2c_bus = new i2c(sda, scl, port);
-    }
+    Accelerometer(uint8_t sda, uint8_t scl, i2c_port_t port);
 
-    void begin() {
-        i2c_bus->writeByte(MPU6050_ADDR, MPU6050_PWR_MGMT_1, 0x00);  // Wake up MPU6050
-    }
+    void begin();
 
-    void readRawAccel() {
-        uint8_t buffer[6];
-        i2c_bus->readBytes(MPU6050_ADDR, MPU6050_ACCEL_XOUT_H, buffer, 6);
-        
-        xAccel = (buffer[0] << 8) | buffer[1];
-        yAccel = (buffer[2] << 8) | buffer[3];
-        zAccel = (buffer[4] << 8) | buffer[5];
-    }
+    void readRawAccel();
 
-    int16_t getXAccel() { return xAccel; }
-    int16_t getYAccel() { return yAccel; }
-    int16_t getZAccel() { return zAccel; }
+    int16_t getXAccel();
+    int16_t getYAccel();
+    int16_t getZAccel();
 };

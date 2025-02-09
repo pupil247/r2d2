@@ -332,6 +332,8 @@ public:
             case HTTP_EVENT_DISCONNECTED:
                 ESP_LOGI("HTTP", "HTTP_EVENT_DISCONNECTED");
                 break;
+            default:
+                break;
         }
         return ESP_OK;
     }

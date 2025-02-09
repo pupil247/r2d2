@@ -16,19 +16,19 @@
 namespace ioMapping{
 
     //Left Leg pins
-    const uint8_t LEGR_IN1 = 6;
-    const uint8_t LEGR_IN2 = 5; 
-    const uint8_t LEGR_PWM = 16; 
-    const uint8_t LEGR_STNDBY = 7;
+    const uint8_t LEGL_IN1 = 20;
+    const uint8_t LEGL_IN2 = 21; 
+    const uint8_t LEGL_PWM = 19; 
+    const uint8_t LEGL_STNDBY = 47;
 
     //Right Leg pins
-    const uint8_t LEGL_IN1 = 10;
-    const uint8_t LEGL_IN2 = 11; 
-    const uint8_t LEGL_PWM = 12; 
-    const uint8_t LEGL_STNDBY = 13;
+    const uint8_t LEGR_IN1 = 48;
+    const uint8_t LEGR_IN2 = 35; 
+    const uint8_t LEGR_PWM = 36; 
+    const uint8_t LEGR_STNDBY = 2;
 
-    const uint8_t sda = 8;
-    const uint8_t scl = 9;
+    const uint8_t sda = 13;
+    const uint8_t scl = 14;
 
 
 

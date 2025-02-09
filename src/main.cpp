@@ -24,21 +24,22 @@ esp_err_t Main::setup(){
     accelerometer = new Accelerometer(ioMapping::sda, ioMapping::scl, I2C_NUM_1);
     wifi = new Wifi();
     rightLeg = new RightLeg();
-    leftLeg = new LeftLeg();
+    //leftLeg = new LeftLeg();
     //movement = new Movement();
-    wifi->attach(rightLeg);
-    wifi->attach(leftLeg);
-    wifi->begin();
-    wifi->scan();
-    if(wifi->connect("Loulou","Loulou141295") == ESP_OK){
+    //wifi->attach(rightLeg);
+    //wifi->attach(leftLeg);
+    //wifi->begin();
+    //wifi->scan();
+
+    /*if(wifi->connect("Loulou","Loulou141295") == ESP_OK){
         ESP_LOGI(LOG_TAG,"Connected to wifi");
     }
     else{
         ESP_LOGE(LOG_TAG,"Failed to connect to wifi");
-    }
+    }*/
     vTaskDelay(pdMS_TO_TICKS(5000));
 
-    wifi->start();
+    //wifi->start();
     accelerometer->begin();
     //movement->start();
     
@@ -46,7 +47,9 @@ esp_err_t Main::setup(){
 }
 
 void Main::loop(){
-    //((RightLeg*)rightLeg)->forward();
+    ((RightLeg*)rightLeg)->forward();
+    vTaskDelay(pdSecond); //1s
+    ((RightLeg*)rightLeg)->reverse();
     ESP_LOGI("Alive","test");
     //vTaskDelay(pdSecond); //1s
     //((RightLeg*)rightLeg)->reverse();

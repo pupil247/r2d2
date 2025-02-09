@@ -109,10 +109,15 @@ class LeftLeg : public Motor{
     public:
         LeftLeg(): Motor(){
             // Configure the pin as an output
-            //in1.init();
-            //in2.init();
-            //standby.init();
-            //pwm.init();
+            in1.init();
+            in2.init();
+            standby.init();
+            pwm.init();
+
+            standby.set(Gpio::GpioState::HIGH);
+            pwm.setValue(Gpio::GpioState::LOW);
+            in1.set(Gpio::GpioState::LOW);
+            in2.set(Gpio::GpioState::LOW);
             
         }
 
